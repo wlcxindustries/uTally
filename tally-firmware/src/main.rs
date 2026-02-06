@@ -13,7 +13,7 @@ use embedded_hal_bus::spi::ExclusiveDevice;
 use ksz8851snl::State;
 
 use embassy_executor::Spawner;
-use embassy_net::{IpListenEndpoint, Runner, StackResources, tcp::TcpSocket};
+use embassy_net::{IpListenEndpoint, Runner, Stack, StackResources, tcp::TcpSocket};
 use embassy_sync::blocking_mutex::raw::NoopRawMutex;
 use embassy_time::{Delay, Duration, Timer};
 use esp_alloc as _;
@@ -127,26 +127,37 @@ async fn main(spawner: Spawner) {
         seed,
     );
     spawner.spawn(eth_runner_task(eth_runner)).unwrap();
+    spawner.must_spawn(net_task(eth_stack));
 
+    let mut btn = Input::new(peripherals.GPIO0, Pull::None);
+
+    spawner
+        .spawn(leds::led_animator(
+            peripherals.RMT,
+            peripherals.GPIO6.into(),
+        ))
+        .ok();
+
+    loop {
+        btn.wait_for_low().await;
+        defmt::info!("Button!");
+        btn.wait_for_high().await;
+    }
+}
+
+#[embassy_executor::task]
+async fn net_task(eth_stack: Stack<'static>) {
     loop {
         defmt::info!("Waiting for ethernet link up...");
         eth_stack.wait_link_up().await;
         defmt::info!("Link up!");
-        defmt::info!("Wating for dhcp...");
+        defmt::info!("Waiting for dhcp...");
         eth_stack.wait_config_up().await;
         if let Some(c) = eth_stack.config_v4() {
             defmt::info!("DHCP: {}", c.address);
         }
-        spawner
-            .spawn(leds::led_animator(
-                peripherals.RMT,
-                peripherals.GPIO6.into(),
-            ))
-            .ok();
-
-        loop {
-            Timer::after_millis(50).await;
-        }
+        eth_stack.wait_link_down().await;
+        defmt::info!("Link down :(");
     }
 }
 
