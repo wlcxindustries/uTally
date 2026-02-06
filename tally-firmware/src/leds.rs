@@ -54,7 +54,7 @@ fn pulse<const PIXELS: usize>(color: Hsv, phase: f32) -> [RGB8; PIXELS] {
 }
 
 #[embassy_executor::task]
-async fn led_animator(rmt: RMT, pin: AnyPin) {
+pub async fn led_animator(rmt: RMT, pin: AnyPin) {
     let freq = 80u32.MHz();
     let rmt = Rmt::new(rmt, freq).unwrap();
     let rmt_buffer = [0u32; PIXELS * 24 + 1];

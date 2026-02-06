@@ -31,12 +31,12 @@ heapless = "0.8.0"
 log = "0.4.27"
 micromath = "2.1.0"
 postcard = "1.1.1"
-postcard-rpc = { version = "0.11.9", features = [ "defmt", "embassy-net-tcp-server", "embassy-usb-0_4-server", "embassy-usb-0_3-server"], default-features = false }
+#postcard-rpc = { version = "0.11.9", features = [ "defmt", "embassy-net-tcp-server", "embassy-usb-0_4-server", "embassy-usb-0_3-server"], default-features = false, optional = true }
 postcard-schema = "0.2.1"
 serde = { version = "1.0.219", default-features = false, features = ["derive"] }
 smart-leds = "0.4.0"
 static_cell = "2.1.0"
-tally-rpc = { version = "0.1.0", path = "../tally-rpc" }
+tally-rpc = { version = "0.1.0", path = "../tally-rpc", optional = true }
 
 [[bin]]
 name = "firmware"
@@ -60,6 +60,10 @@ incremental = true
 default = ["defmt", "esp32c3"]
 defmt = ["dep:defmt", "embedded-hal/defmt-03", "embedded-hal-async/defmt-03", "embassy-net/defmt", "esp-println/defmt-espflash"]
 esp32c3 = ["esp-hal-smartled/esp32c3", "esp-backtrace/esp32c3", "esp-hal/esp32c3", "esp-hal-embassy/esp32c3", "esp-println/esp32c3", "esp-wifi/esp32c3"]
+prpc = [
+  "dep:tally-rpc",
+#  "dep:postcard-rpc"
+]
 
 [profile.dev.package."esp-wifi"]
 opt-level = 3
